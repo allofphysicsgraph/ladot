@@ -1,9 +1,7 @@
-This is a copy of <https://brighten.bigw.org/projects/ladot/> as of 2024-06-16.
-
-Ladot 1.2
+Ladot 1.1
 ---------
 
-2005-12-04
+2005-12-03
 Brighten Godfrey
 godfreyb@bigw.org
 
@@ -125,10 +123,6 @@ Limitations/Bugs/To Do
 
 Change Log
 ----------
-
-Version 1.2 (2005-12-04)
-
-    * Fixed problem that arises with some versions of `sed'.
 
 Version 1.1 (2005-12-03)
 

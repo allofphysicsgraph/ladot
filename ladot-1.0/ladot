@@ -1,0 +1,70 @@
+#!/usr/bin/perl
+
+%paststubs = ();
+
+if (@ARGV != 1) {
+    die "Usage: $0 [infile]";
+    }
+
+# Open input and output files
+open(INFILE, "<$ARGV[0]");
+$ARGV[0] =~ /(.*)\.ladot$/;
+$basename = $1;
+if ($basename eq "") {
+    $basename = $ARGV[0];
+    }
+open(DOTOUT, ">/tmp/$basename.dot");
+open(TEXOUT, ">$basename.tex");
+
+while ($line = <INFILE>)
+    {
+    # process each TEX{...}TEX segment on this line
+#    while ($line =~ /(TEX(\((\d+)\))?\{(.*?)\}TEX)/) {
+    while ($line =~ /(\$.*?\$)(\((\d+)\))?/) {
+#        print "LINE: $line";
+        $sizehint = $3;
+#    print "SIZEHINT: $sizehint\n";
+        $tex = $1;
+        $stub = make_stub($tex, $sizehint);
+        $line =~ s/(\$.*?\$)(\((\d+)\))?/\"$stub\"/;
+        print TEXOUT "\\psfrag{$stub}[cc][cc]{$tex}\n";
+        }
+#    print "FINAL LINE: $line";
+    print DOTOUT $line;
+    }
+
+close(DOTOUT);
+close(TEXOUT);
+system("dot -Tps /tmp/$basename.dot > $basename.ps");
+
+sub make_stub($$)
+    {
+    # Make a placeholder (stub) for the TeX which will be substituted for the
+    # real formatted TeX later.  Arguments are TeX code and an optional
+	# "hint" about the desired width of the box.
+	
+	# This is tricky because the length of the stub
+    # that we choose affects how Dot formats the PostScript.  We use the
+    # heuristic that the length of the LaTeX code is correlated with the
+    # amount of space needed to render the LaTeX code.
+
+    if ($paststubs{$_[0]}) {
+        return $paststubs{$_[0]};
+    }
+
+    my $length = int($_[1]);
+    if ($length == 0) {
+        # no sizehint given
+        $length = length($_[0]) - 1;
+    }
+#    print "LENGTH of $_[0]: $length\n";
+    $stub_charset="-_1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    my $stub = "";
+    for (my $i = 1; $i <= $length; $i++) {
+        $stub .= substr($stub_charset, int(rand(length($stub_charset))), 1);
+        #$stub = $stub . int(rand(length($stub_charset)));
+        }
+    #print "NEW STUB for $_[0]: $stub\n";
+    $paststubs{$_[0]} = $stub;
+    return $stub;
+    }
